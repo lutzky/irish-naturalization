@@ -67,10 +67,10 @@ func main() {
 	daysStrict := 0
 	for t := startDate; t.Sub(startDate) < time.Duration(*allowedYears)*365*24*time.Hour; t = t.Add(24 * time.Hour) {
 		if daysLenient == *requiredDays {
-			fmt.Printf("Reached required days (lenient version) on %s\n", t.Format("2006-01-02"))
+			fmt.Printf("Reached required days (lenient version) on %s\n", t.Add(-24*time.Hour).Format("2006-01-02"))
 		}
 		if daysStrict == *requiredDays {
-			fmt.Printf("Reached required days (strict version) on %s\n", t.Format("2006-01-02"))
+			fmt.Printf("Reached required days (strict version) on %s\n", t.Add(-24*time.Hour).Format("2006-01-02"))
 			return
 		}
 		departureDate := getDate("2999-01-01")
