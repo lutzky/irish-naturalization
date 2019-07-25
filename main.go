@@ -63,21 +63,41 @@ func main() {
 	i := 0
 	inTrip := false
 	inBusiness := false
-	daysLenient := 0
-	daysStrict := 0
+	daysLenient := 1
+	daysStrict := 1
 	for t := startDate; t.Sub(startDate) < time.Duration(*allowedYears)*365*24*time.Hour; t = t.Add(24 * time.Hour) {
-		if daysLenient == *requiredDays {
-			fmt.Printf("Reached required days (lenient version) on %s\n", t.Add(-24*time.Hour).Format("2006-01-02"))
-		}
-		if daysStrict == *requiredDays {
-			fmt.Printf("Reached required days (strict version) on %s\n", t.Add(-24*time.Hour).Format("2006-01-02"))
-			return
-		}
 		departureDate := getDate("2999-01-01")
 		returnDate := departureDate
 		if i < len(data.Trips) {
 			departureDate = getDate(data.Trips[i].Departure)
 			returnDate = getDate(data.Trips[i].Return)
+		}
+		header := fmt.Sprintf("%s inTrip:%5t inBusiness:%5t daysLenient:%4d daysStrict:%4d ", t.Format("2006-01-02"), inTrip, inBusiness, daysLenient, daysStrict)
+		if daysLenient == *requiredDays {
+			fmt.Printf("Reached required days (lenient version) on %s\n", t.Format("2006-01-02"))
+		}
+		if daysStrict == *requiredDays {
+			fmt.Printf("Reached required days (strict version) on %s\n", t.Format("2006-01-02"))
+			return
+		}
+		if !inTrip {
+			if t.Before(departureDate.Add(-24 * time.Hour)) {
+				fmt.Println(header, "Nothing")
+			} else {
+				fmt.Println(header, "Started trip: ", data.Trips[i].Comment)
+				inTrip = true
+				inBusiness = data.Trips[i].IsBusiness
+			}
+		} else {
+			if t.Before(returnDate) {
+				fmt.Println(header, "Nothing")
+
+			} else {
+				fmt.Println(header, "Ended trip: ", data.Trips[i].Comment)
+				inTrip = false
+				inBusiness = false
+				i++
+			}
 		}
 		if !inTrip {
 			daysLenient++
@@ -87,25 +107,7 @@ func main() {
 				daysLenient++
 			}
 		}
-		header := fmt.Sprintf("%s inTrip:%5t inBusiness:%5t daysLenient:%4d daysStrict:%4d ", t.Format("2006-01-02"), inTrip, inBusiness, daysLenient, daysStrict)
-		if !inTrip {
-			if t.Before(departureDate) {
-				//fmt.Println(header, "Nothing")
-				continue
-			}
-			fmt.Println(header, "Started trip: ", data.Trips[i].Comment)
-			inTrip = true
-			inBusiness = data.Trips[i].IsBusiness
-		} else {
-			if t.Before(returnDate) {
-				//fmt.Println(header, "Nothing")
-				continue
-			}
-			fmt.Println(header, "Ended trip: ", data.Trips[i].Comment)
-			inTrip = false
-			inBusiness = false
-			i++
-		}
+
 	}
 
 }
